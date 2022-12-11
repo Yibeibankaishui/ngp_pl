@@ -59,6 +59,7 @@ def get_rays(directions, c2w):
     """
     if c2w.ndim==2:
         # Rotate ray directions from camera coordinate to the world coordinate
+        # '@' is matrix multiply
         rays_d = directions @ c2w[:, :3].T
     else:
         rays_d = rearrange(directions, 'n c -> n 1 c') @ \

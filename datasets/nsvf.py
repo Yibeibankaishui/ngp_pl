@@ -17,9 +17,13 @@ class NSVFDataset(BaseDataset):
         self.read_intrinsics()
 
         if kwargs.get('read_meta', True):
+            # read bbox.txt
             xyz_min, xyz_max = \
                 np.loadtxt(os.path.join(root_dir, 'bbox.txt'))[:6].reshape(2, 3)
+            # ~TODO: what is shift and scale
+            # center of bbox
             self.shift = (xyz_max+xyz_min)/2
+            # maximum edge length of bbox
             self.scale = (xyz_max-xyz_min).max()/2 * 1.05 # enlarge a little
 
             # hard-code fix the bound error for some scenes...
@@ -31,6 +35,7 @@ class NSVFDataset(BaseDataset):
     def read_intrinsics(self):
         if 'Synthetic' in self.root_dir or 'Ignatius' in self.root_dir:
             with open(os.path.join(self.root_dir, 'intrinsics.txt')) as f:
+                # only read the first number in intrinsics.txt (1111.1110311937682)
                 fx = fy = float(f.readline().split()[0]) * self.downsample
             if 'Synthetic' in self.root_dir:
                 w = h = int(800*self.downsample)
@@ -57,10 +62,12 @@ class NSVFDataset(BaseDataset):
         self.rays = []
         self.poses = []
 
+        # ~TODO: what is split
         if split == 'test_traj': # BlendedMVS and TanksAndTemple
             if 'Ignatius' in self.root_dir:
                 poses_path = \
                     sorted(glob.glob(os.path.join(self.root_dir, 'test_pose/*.txt')))
+                    # glob is used to find specific file
                 poses = [np.loadtxt(p) for p in poses_path]
             else:
                 poses = np.loadtxt(os.path.join(self.root_dir, 'test_traj.txt'))
@@ -68,10 +75,12 @@ class NSVFDataset(BaseDataset):
             for pose in poses:
                 c2w = pose[:3]
                 c2w[:, 0] *= -1 # [left down front] to [right down front]
+                # set the camera poses to object coordinate
                 c2w[:, 3] -= self.shift
                 c2w[:, 3] /= 2*self.scale # to bound the scene inside [-0.5, 0.5]
                 self.poses += [c2w]
         else:
+            # prefix indicates test/train/val set
             if split == 'train': prefix = '0_'
             elif split == 'trainval': prefix = '[0-1]_'
             elif split == 'trainvaltest': prefix = '[0-2]_'
@@ -79,12 +88,19 @@ class NSVFDataset(BaseDataset):
             elif 'Synthetic' in self.root_dir: prefix = '2_' # test set for synthetic scenes
             elif split == 'test': prefix = '1_' # test set for real scenes
             else: raise ValueError(f'{split} split not recognized!')
+            
+            # get files of images and poses
             img_paths = sorted(glob.glob(os.path.join(self.root_dir, 'rgb', prefix+'*.png')))
             poses = sorted(glob.glob(os.path.join(self.root_dir, 'pose', prefix+'*.txt')))
 
             print(f'Loading {len(img_paths)} {split} images ...')
             for img_path, pose in tqdm(zip(img_paths, poses)):
+                # pose :    [R t]
+                #           [0 1]
+                
+                # c2w  :    [R t]
                 c2w = np.loadtxt(pose)[:3]
+                # do something with translation
                 c2w[:, 3] -= self.shift
                 c2w[:, 3] /= 2*self.scale # to bound the scene inside [-0.5, 0.5]
                 self.poses += [c2w]
@@ -93,8 +109,9 @@ class NSVFDataset(BaseDataset):
                 if 'Jade' in self.root_dir or 'Fountain' in self.root_dir:
                     # these scenes have black background, changing to white
                     img[torch.all(img<=0.1, dim=-1)] = 1.0
-
+                # simply add img to list -- rays
                 self.rays += [img]
 
             self.rays = torch.FloatTensor(np.stack(self.rays)) # (N_images, hw, ?)
+            
         self.poses = torch.FloatTensor(self.poses) # (N_images, 3, 4)

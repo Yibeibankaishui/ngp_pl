@@ -64,6 +64,7 @@ class ColmapDataset(BaseDataset):
             R = im.qvec2rotmat(); t = im.tvec.reshape(3, 1)
             w2c_mats += [np.concatenate([np.concatenate([R, t], 1), bottom], 0)]
         w2c_mats = np.stack(w2c_mats, 0)
+        # TODO: why inv ?
         poses = np.linalg.inv(w2c_mats)[perm, :3] # (N_images, 3, 4) cam2world matrices
 
         pts3d = read_points3d_binary(os.path.join(self.root_dir, 'sparse/0/points3D.bin'))
@@ -72,6 +73,7 @@ class ColmapDataset(BaseDataset):
         self.poses, self.pts3d = center_poses(poses, pts3d)
 
         scale = np.linalg.norm(self.poses[..., 3], axis=-1).min()
+        # use scale
         self.poses[..., 3] /= scale
         self.pts3d /= scale
 

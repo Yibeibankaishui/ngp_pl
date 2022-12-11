@@ -58,3 +58,13 @@ class NeRFLoss(nn.Module):
                                      results['ts'], results['rays_a'])
 
         return d
+    
+# TODO: complete DepthLoss
+class DepthLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+    def forward(self, results, target, **kwargs):
+        d = 0
+        
+        return 0
