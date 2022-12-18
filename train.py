@@ -21,7 +21,7 @@ from models.rendering import render, MAX_SAMPLES
 # optimizer, losses
 from apex.optimizers import FusedAdam
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from losses import NeRFLoss
+from losses import NeRFLoss, DepthLoss
 
 # metrics
 from torchmetrics import (
@@ -58,7 +58,9 @@ class NeRFSystem(LightningModule):
         self.warmup_steps = 256
         self.update_interval = 16
 
+        # TODO: change loss function
         self.loss = NeRFLoss(lambda_distortion=self.hparams.distortion_loss_w)
+        
         self.train_psnr = PeakSignalNoiseRatio(data_range=1)
         self.val_psnr = PeakSignalNoiseRatio(data_range=1)
         self.val_ssim = StructuralSimilarityIndexMeasure(data_range=1)

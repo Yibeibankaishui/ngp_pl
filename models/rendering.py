@@ -106,6 +106,8 @@ def __render_rays_test(model, rays_o, rays_d, hits_t, **kwargs):
 
     results['opacity'] = opacity
     results['depth'] = depth
+    # TODO: check
+    results['disps'] = 1/(depth+1e-6)
     results['rgb'] = rgb
     results['total_samples'] = total_samples # total samples for all rays
 

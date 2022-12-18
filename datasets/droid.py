@@ -37,8 +37,9 @@ class DROIDDataset(BaseDataset):
             rays = self.rays[img_idxs, pix_idxs]
             # TODO: randomly select depth pixels
             disps = self.disps[img_idxs, pix_idxs]
+            depth = self.depth[img_idxs, pix_idxs]
             sample = {'img_idxs': img_idxs, 'pix_idxs': pix_idxs,
-                        'rgb': rays[:, :3], 'disps': disps}
+                        'rgb': rays[:, :3], 'disps': disps, 'depth': depth}
             if self.rays.shape[-1] == 4: # HDR-NeRF data
                 sample['exposure'] = rays[:, 3:]
         else:
@@ -122,7 +123,7 @@ class DROIDDataset(BaseDataset):
         self.poses = c2w
         # images need to rearrange
         images = rearrange(images, 'N C H W -> N H W C')
-        # TODO: shift and scale for poses AND images ?
+        # ~TODO: shift and scale for poses AND images ?
         for img_npy, disp_npy in zip(images, disps):
             # h w c --> (h w) c
             img = read_image_npy(img_npy, self.img_wh, blend_a=False)
@@ -137,5 +138,6 @@ class DROIDDataset(BaseDataset):
             self.rays = torch.FloatTensor(np.stack(self.rays)) # (N_images, hw, ?)
             # inverse DEPTH
             self.disps = torch.FloatTensor(np.stack(self.disps))
+            self.depth = 1/self.disps
         self.poses = torch.FloatTensor(self.poses) # (N_images, 3, 4)
     
