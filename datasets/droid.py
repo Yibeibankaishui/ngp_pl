@@ -54,14 +54,14 @@ class DROIDDataset(BaseDataset):
     
 
     def read_intrinsics(self):
-        # TODO: read intrinsics
+        # ~TODO: read intrinsics
         intrinsics = np.load(os.path.join(self.root_dir, "intrinsics.npy"))
         # fx, fy, cx, cy
         fx = 726
         fy = 726
         # 344 560
-        h = int(344*self.downsample)
-        w = int(560*self.downsample)
+        h = int(384*self.downsample)
+        w = int(512*self.downsample)
         # fx = intrinsics[0,0]
         # fy = intrinsics[0,1]
         # cx = intrinsics[0,2]

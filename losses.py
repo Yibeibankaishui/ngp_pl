@@ -72,7 +72,7 @@ class DepthLoss(nn.Module):
         d = {}
         d['rgb'] = (results['rgb']-target['rgb'])**2
         # d['disps'] = (results['disps']-target['disps'])**2
-        d['depth'] = (results['depth']-target['depth'])**2
+        # d['depth'] = (results['depth']-target['depth'])**2
 
         o = results['opacity']+1e-10
         # encourage opacity to be either 0 or 1 to avoid floater
